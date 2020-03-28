@@ -1,3 +1,5 @@
+include $(CURDIR)/credentials
+
 PY?=python3
 PELICAN?=pelican
 PELICANOPTS=
@@ -80,7 +82,8 @@ publish:
 
 github: publish | .git
 	ghp-import -m "Generate Pelican site" -b $(GITHUB_PAGES_BRANCH) $(OUTPUTDIR)
-	git push origin $(GITHUB_PAGES_BRANCH)
+	git push 'https://$(GIT_USER):$(GIT_PASSWORD)@github.com/eliyarson/blog.git' $(GITHUB_PAGES_BRANCH)
+	
 
 
 .PHONY: html help clean regenerate serve serve-global devserver publish github

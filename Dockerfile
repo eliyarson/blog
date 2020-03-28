@@ -9,6 +9,7 @@ RUN apk update && apk add \
 
 RUN mkdir /website && chmod 777 /website
 COPY requirements.txt /website/
+COPY credentials /website/
 WORKDIR /website
 
 # prevent writing .pyc files
