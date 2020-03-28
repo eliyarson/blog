@@ -75,8 +75,8 @@ publish:
 	$(PELICAN) $(INPUTDIR) -o $(OUTPUTDIR) -s $(PUBLISHCONF) $(PELICANOPTS)
 
 .git:
-	git init
-    git remote add origin -f https://github.com/eliyarson/blog
+	git init 
+	git remote add origin -f https://github.com/eliyarson/blog.git
 
 github: publish | .git
 	ghp-import -m "Generate Pelican site" -b $(GITHUB_PAGES_BRANCH) $(OUTPUTDIR)
