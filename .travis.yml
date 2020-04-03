@@ -8,7 +8,7 @@ install:
 script:
 - mkdir themes && cd themes && git init && git remote add origin -f https://github.com/getpelican/pelican-themes.git && git config core.sparseCheckout true && echo "/pelican-bootstrap3/" >> .git/info/sparse-checkout && git pull origin master && cd .. 
 - mkdir plugins && cd plugins && git init && git remote add origin -f https://github.com/getpelican/pelican-plugins && git config core.sparseCheckout true && echo "/i18n_subsites/" >> .git/info/sparse-checkout && git pull origin master && cd ..
-- git init
+- git clone --depth=50 --branch=master https://github.com/eliyarson/blog.git eliyarson/blog
 - make publish
 deploy:
   provider: pages
