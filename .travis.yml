@@ -9,8 +9,7 @@ script:
 - mkdir themes \
 && cd themes \
 && git init \
-&& git remote add origin -f \
-	https://github.com/getpelican/pelican-themes.git \
+&& git remote add origin -f https://github.com/getpelican/pelican-themes.git \
 && git config core.sparseCheckout true \
 && echo "/pelican-bootstrap3/" >> .git/info/sparse-checkout \
 && git pull origin master 
