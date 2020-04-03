@@ -11,7 +11,7 @@ script:
 - make publish
 deploy:
   provider: pages
-  cleanup: false
+  skip_cleanup: true
   token: $GITHUB_TOKEN
   local_dir: output
   target_branch: gh-pages
