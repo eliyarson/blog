@@ -19,7 +19,7 @@ CATEGORY_FEED_ATOM = 'feeds/{slug}.atom.xml'
 
 DELETE_OUTPUT_DIRECTORY = True
 
-THEME = 'themes/pelican-bootstrap3'
+THEME = 'website/themes/pelican-bootstrap3'
 BOOTSTRAP_THEME = 'simplex'
 PLUGIN_PATHS = ['plugins/']
 PLUGINS = ['i18n_subsites']
