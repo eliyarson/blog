@@ -6,3 +6,5 @@ Tags: pelican, publishing,travisci
 Slug: travis-ci
 Authors: Eli Yarson
 Summary: Testando implementação Continua com TravisCI
+
+Testando TravisCI.
