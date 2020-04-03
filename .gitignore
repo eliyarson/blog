@@ -1,6 +1,0 @@
-#ignore credentials
-credentials
-__pycache__/
-output/
-*.pyc
-pub.sh
