@@ -14,6 +14,6 @@ deploy:
   cleanup: false
   github_token: $GITHUB_TOKEN
   local_dir: output
-  target_branch: master
+  target_branch: gh-pages
   on:
-    branch: source
+    branch: master
