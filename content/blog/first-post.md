@@ -1,4 +1,4 @@
-Title: Construindo um blog em Pelican, Docker e Github Pages.
+Title: Construindo um blog com Pelican, Docker e Github Pages.
 Date: 2020-03-25 18:07
 Modified: '2020-03-25 21:33'
 Category: Python
