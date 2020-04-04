@@ -7,4 +7,6 @@ Slug: travis-ci
 Authors: Eli Yarson
 Summary: Testando implementação Continua com TravisCI
 
-Testando TravisCI.
+
+## CI/CD
+No meu último post, explicando como foi feita a instalação e configuração desse blog.
