@@ -22,7 +22,7 @@ DELETE_OUTPUT_DIRECTORY = True
 THEME = 'themes/pelican-bootstrap3'
 BOOTSTRAP_THEME = 'simplex'
 PLUGIN_PATHS = ['plugins/']
-PLUGINS = ['i18n_subsites']
+PLUGINS = ['i18n_subsites','pelican_gist']
 JINJA_ENVIRONMENT = {
     'extensions': ['jinja2.ext.i18n']
 }
