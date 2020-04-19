@@ -38,10 +38,16 @@ Utilizando a própria API do Google, a _Sheets API_, é possível acessar qualqu
 
 ### Resultado
 
-[gist:id=cc14c03616a3e802024572e111e2aa53,file=main.py]
+Após algumas horas brincando com o script, o resultado pode ser visualizado a seguir:
 
-TODO:
--Benchmarks
--Configurar e documentar o repositório
--Terminar a postagem do blog
--Ibagens
+[gist:id=cc14c03616a3e802024572e111e2aa53,file=main.py]  
+
+A função, por meio do parâmetro  de input `request` recebe um `body` em JSON no seguinte formato:
+`{
+  "destiny_key": "1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI",
+  "destiny_sheet_name": "benchmark_sheet",
+  "origin_key": "1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI",
+  "origin_sheet_name": "origin_sheet"
+} `  
+
+--Terminar script.
