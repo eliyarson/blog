@@ -38,9 +38,10 @@ Utilizando a própria API do Google, a _Sheets API_, é possível acessar qualqu
 
 ### Resultado
 
-Após algumas horas brincando com o script, o resultado pode ser visualizado a seguir:
+Após algumas horas brincando com o script, o resultado pode ser visualizado a seguir:  
 
-[gist:id=cc14c03616a3e802024572e111e2aa53,file=main.py]  
+[gist:id=cc14c03616a3e802024572e111e2aa53,file=main.py]
+
 
 A função, por meio do parâmetro  de input `request` recebe um `body` em JSON no seguinte formato:
 `{
