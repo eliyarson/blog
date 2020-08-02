@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Automatizando o Google Sheets por meio do Cloud Functions - Blog do Eli</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<link rel="canonical" href="https://yarson.xyz/cloud-functions-primeiro-deploy.html">
+
+        <meta name="author" content="Eli Yarson" />
+        <meta name="keywords" content="gcp,python" />
+        <meta name="description" content="Automatizando scripts no Cloud Functions" />
+
+        <meta property="og:site_name" content="Blog do Eli" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Automatizando o Google Sheets por meio do Cloud Functions"/>
+        <meta property="og:url" content="https://yarson.xyz/cloud-functions-primeiro-deploy.html"/>
+        <meta property="og:description" content="Automatizando scripts no Cloud Functions"/>
+        <meta property="article:published_time" content="2020-04-17" />
+            <meta property="article:section" content="Python" />
+            <meta property="article:tag" content="gcp" />
+            <meta property="article:tag" content="python" />
+            <meta property="article:author" content="Eli Yarson" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://yarson.xyz/theme/css/bootstrap.simplex.min.css" type="text/css"/>
+    <link href="https://yarson.xyz/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="https://yarson.xyz/theme/css/pygments/native.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://yarson.xyz/theme/css/style.css" type="text/css"/>
+
+        <link href="https://yarson.xyz/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Blog do Eli ATOM Feed"/>
+
+        <link href="https://yarson.xyz/feeds/python.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Blog do Eli Python ATOM Feed"/>
+</head>
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="https://yarson.xyz/" class="navbar-brand">
+Blog do Eli            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                         <li><a href="https://yarson.xyz/pages/about.html">
+                             Sobre
+                          </a></li>
+                        <li class="active">
+                            <a href="https://yarson.xyz/category/python.html">Python</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="https://yarson.xyz/cloud-functions-primeiro-deploy.html"
+                       rel="bookmark"
+                       title="Permalink to Automatizando o Google Sheets por meio do Cloud Functions">
+                        Automatizando o Google Sheets por meio do Cloud Functions
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2020-04-17T00:00:00-03:00"> Fri 17 April 2020</time>
+    </span>
+
+
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="https://yarson.xyz/tag/gcp.html">gcp</a>
+        /
+	<a href="https://yarson.xyz/tag/python.html">python</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <h3>Intro</h3>
+<p>Antes de explicar o que eu fiz, tenho que falar que dar deploy no Google Cloud Functions foi <em>extremamente fácil</em>. Eu já tinha feito algo semelhante no AWS Lambda, e eu tive que ler vários artigos no Medium e utilizar o framework <em>Serverless</em>, brigar algumas horas com a configuração do AWS e então finalmente dar um deploy. No GCP eu dei um deploy em cerca de 15 minutos.  </p>
+<h3>Why</h3>
+<p>Uma das minhas funções no Méliuz é automatizar tarefas por meio da construção de scripts. Boa parte deles são escritos no <em>Google Apps Script</em>, que é um framework escrito em JavaScript. Na maioria das tarefas, que envolvem extrair dados do banco para uma planilha, mover esses dados entre planilhas e enviar e-mails, o Apps Script atende perfeitamente. No entanto, para algumas tarefas de manipulação de dados mais complexas ele infelizmente acaba sendo insuficiente, pelo simples fato que não é possível importar bibliotecas nele.  Eu poderia fazer o data wrangling só com os métodos de Array? Talvez. Mas já existem bibliotecas prontas e otimizadas, como por exemplo o <em>pandas</em> do Python.  </p>
+<h3>Google Cloud Functions</h3>
+<p>Em um mundo ideal, eu utilizaria uma ferramenta como o <em>Apache Airflow</em> e colocaria em uma <em>view</em> do banco de dados todas as informações, já tratadas no formato desejado. Para uma quantidade de informações grande (milhões de linhas) esse seria o procedimento correto. Mas e se eu quiser algo pequeno? Para até aproximadamente 150 mil linhas, eu consigo utilizar uma planilha do sheets como destino do meu ETL. Se eu escrever todo o script em Python no Cloud Functions, caso no futuro os dados cresçam eu posso só mudar o destino, seja para um banco MongoDB ou para um banco PostgreSQL, a estrutura geral do script será a mesma, só mudarei o conector.  </p>
+<h3>O processo</h3>
+<p>Antes de começar, é preciso ter uma conta no Google Cloud Plataform, e um método de faturamento configurado (Mesmo ele sendo grátis, você tem um limite de créditos, caso eles acabem ou você exceda a cota grátis, o seu cartão será cobrado). Após criar uma conta (eu já tinha), é necessário instalar o SDK do GCP.<br>
+Eu utilizo o WSL2 no Windows, então no Terminal eu segui as <a href="https://cloud.google.com/sdk/docs/downloads-apt-get">instruções do Google</a> para instalar o SDK via <code>apt-get</code>.
+Para dar o deploy no Cloud Functions, eu segui o quickstart, também do Google, que pode ser acessado <a href="https://cloud.google.com/functions/docs/quickstart-python">aqui</a>.  </p>
+<p>OK, fiz o deploy e testei. Embora o deploy seja rápido, o que dura aproximadamente 1 minuto, eu precisva de uma maneira de testar localmente antes de dar o deploy, agilizando o processo de desenvolvimento e evitando ao máximo gastar créditos de maneira desnecessária.  </p>
+<p>Uma solução é utilizar o <code>functions-framework</code> do Google, que nada mais é que uma mini aplicação em Flask, que quando executada, roda um servidor http semelhante ao ambiente do Cloud Functions. Dessa maneira é possível fazer solicitações pela CLI usando <code>curl</code>, e após ter testado corretamente a aplicação, dar o deploy pro Google Functions.  </p>
+<p>Para executar o <code>functions-framework</code>, basta executar o seguinte comando:<br>
+<code>$ functions-framework --target sheet_script --debug</code><br>
+É importante citar que após o parâmetro <code>--target</code> deve vir o nome da sua função definida na sua aplicação <code>main.py</code>. O parâmetro <code>--debug</code> ativa a função debug, semelhante ao <code>debug=True</code> do Flask, dessa maneira qualquer modificação feita no código será refletida instantâneamente na aplicação.  </p>
+<p>Configurei a função e o ambiente de desenvolvimento, agora é hora de botar as mãos na massa. A partir daqui vou descrever um pouco da solução que encontrei para substituir o Google Apps Script.  </p>
+<p>Utilizando a própria API do Google, a <em>Sheets API</em>, é possível acessar qualquer planilha e manipular seus dados. Após ler <a href="https://towardsdatascience.com/use-google-sheets-s3-and-python-to-build-a-website-quickly-8e4501dab02e">esse artigo</a>, nele o autor descreve como ele fez um website com o Sheets e o S3 da AWS. Eu já havia utilizado a API do Sheets antes, principalmente a biblioteca de Python <code>gspread</code>, mas o que me chamou a atenção foi o método de autenticação, por meio de <em>Service Account Credentials</em>. Basicamente o método que eu havia utilizado antes era por meio de tokens OAuth2, que tinham uma duração de algumas horas apenas. Com esse método de autenticação por meio de SAC, é possível manter uma autenticação automática, que não depende do meu input e desse jeito, é possível rodar scripts acionados por CRON Jobs (Utilizando o Google Scheduler é uma opção, ou um próprio Script do Google Apps Script).  </p>
+<h3>Resultado</h3>
+<p>Após algumas horas brincando com o script, o resultado pode ser visualizado a seguir:  </p>
+<div class="gist">
+    <script src='https://gist.github.com/cc14c03616a3e802024572e111e2aa53.js?file=main.py'></script>
+    <noscript>
+        <pre><code>import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import numpy as np
+
+#originKey = '1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI'
+#originSheetName = 'origin_sheet'
+#destinySheetName = 'benchmark_sheet'
+
+
+def sheet_script(request):
+    ## Auth
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(
+        "credentials.json", scope
+    )
+    gc = gspread.authorize(credentials)
+
+    ## POST Request
+
+    content_type = request.headers['content-type']
+    if content_type == 'application/json':
+        request_json = request.get_json(silent=True)
+        if request_json and 'origin_key' and 'origin_sheet_name' and 'destiny_sheet_name' in request_json:
+            origin_key = request_json['origin_key']
+            origin_sheet_name = request_json['origin_sheet_name']
+            destiny_sheet_name = request_json['destiny_sheet_name']
+            destiny_key = request_json['destiny_key']
+        else:
+            raise ValueError(
+                    "JSON is invalid")
+    else:
+        raise KeyError("Content type <> application/json")
+
+    ## Open origin_key Spreadsheet
+    origin_spreadsheet = gc.open_by_key(origin_key)
+    ## Get origin_sheet_name data
+    origin_sheet = origin_spreadsheet.worksheet(origin_sheet_name)
+    origin_sheet_data = origin_sheet.get_all_values()
+
+    ## Transform into DataFrame for manipulations
+    ##uncomment if you want to do data transformation
+
+    #header = origin_sheet_data[0]
+    #df = pd.DataFrame(data=origin_sheet_data, columns=header)
+    #df.drop(0, inplace=True)
+    #df['d'] = [1, 2, 3]
+    #rand = list(np.random.randint(0, 10, size=(1000, 4)))
+    #df2 = pd.DataFrame(rand, columns=list('abcd'))
+    #df = df.append(df2, ignore_index=True)
+    #df_list = [df.columns.values.tolist()] + df.values.tolist()
+
+    ## Copy data
+    destiny_spreadsheet = gc.open_by_key(destiny_key)
+    destiny_sheet = destiny_spreadsheet.worksheet(destiny_sheet_name)
+    destiny_sheet.clear()
+
+    #if you uncomment the section above, comment the line below.
+    df_list = origin_sheet_data
+
+    rows = len(df_list)
+    cols = len(df_list[0])
+    destiny_sheet.resize(rows, cols)
+    params = {'valueInputOption': 'RAW'}
+    body = {'values': df_list}
+    destiny_spreadsheet.values_append(f'{destiny_sheet_name}!A1', params, body)
+    request_json['status'] = 'OK'
+
+    return request_json
+</code></pre>
+    </noscript>
+</div>
+<p>A função, por meio do parâmetro  de input <code>request</code> recebe um <code>body</code> em JSON no seguinte formato:
+<code>{
+  "destiny_key": "1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI",
+  "destiny_sheet_name": "benchmark_sheet",
+  "origin_key": "1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI",
+  "origin_sheet_name": "origin_sheet"
+}</code>  </p>
+<p>Utilizando como base esse código, é possível automatizar diversos fluxos que dependem de uma planilha, para casos em que não é possível construir uma view dentro do Banco de Dados para essa tarefa específica. ;)</p>
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="https://linkedin.com/in/eliyarson"><i class="fa fa-linkedin-square fa-lg"></i> linkedin</a></li>
+    <li class="list-group-item"><a href="https://twitter.com/eliyarson"><i class="fa fa-twitter-square fa-lg"></i> twitter</a></li>
+    <li class="list-group-item"><a href="https://github.com/eliyarson"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2020 Eli Yarson Nabhan
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="https://yarson.xyz/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://yarson.xyz/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="https://yarson.xyz/theme/js/respond.min.js"></script>
+
+
+
+
+</body>
+</html>

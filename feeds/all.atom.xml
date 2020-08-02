@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Blog do Eli</title><link href="https://yarson.xyz/" rel="alternate"></link><link href="https://yarson.xyz/feeds/all.atom.xml" rel="self"></link><id>https://yarson.xyz/</id><updated>2020-08-02T00:00:00-03:00</updated><entry><title>Criando um Admin simples em Flask</title><link href="https://yarson.xyz/admin-flask.html" rel="alternate"></link><published>2020-08-02T00:00:00-03:00</published><updated>2020-08-02T00:00:00-03:00</updated><author><name>Eli Yarson</name></author><id>tag:yarson.xyz,2020-08-02:/admin-flask.html</id><summary type="html">&lt;p&gt;Criando um Admin em Flask e implementando no Google Cloud Run&lt;/p&gt;</summary><content type="html"></content><category term="gcr"></category><category term="python"></category></entry><entry><title>Automatizando o Google Sheets por meio do Cloud Functions</title><link href="https://yarson.xyz/cloud-functions-primeiro-deploy.html" rel="alternate"></link><published>2020-04-17T00:00:00-03:00</published><updated>2020-04-17T00:00:00-03:00</updated><author><name>Eli Yarson</name></author><id>tag:yarson.xyz,2020-04-17:/cloud-functions-primeiro-deploy.html</id><summary type="html">&lt;p&gt;Automatizando scripts no Cloud Functions&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Intro&lt;/h3&gt;
+&lt;p&gt;Antes de explicar o que eu fiz, tenho que falar que dar deploy no Google Cloud Functions foi &lt;em&gt;extremamente fácil&lt;/em&gt;. Eu já tinha feito algo semelhante no AWS Lambda, e eu tive que ler vários artigos no Medium e utilizar o framework &lt;em&gt;Serverless&lt;/em&gt;, brigar algumas horas com a configuração do AWS e então finalmente dar um deploy. No GCP eu dei um deploy em cerca de 15 minutos.  &lt;/p&gt;
+&lt;h3&gt;Why&lt;/h3&gt;
+&lt;p&gt;Uma das minhas funções no Méliuz é automatizar tarefas por meio da construção de scripts. Boa parte deles são escritos no &lt;em&gt;Google Apps Script&lt;/em&gt;, que é um framework escrito em JavaScript. Na maioria das tarefas, que envolvem extrair dados do banco para uma planilha, mover esses dados entre planilhas e enviar e-mails, o Apps Script atende perfeitamente. No entanto, para algumas tarefas de manipulação de dados mais complexas ele infelizmente acaba sendo insuficiente, pelo simples fato que não é possível importar bibliotecas nele.  Eu poderia fazer o data wrangling só com os métodos de Array? Talvez. Mas já existem bibliotecas prontas e otimizadas, como por exemplo o &lt;em&gt;pandas&lt;/em&gt; do Python.  &lt;/p&gt;
+&lt;h3&gt;Google Cloud Functions&lt;/h3&gt;
+&lt;p&gt;Em um mundo ideal, eu utilizaria uma ferramenta como o &lt;em&gt;Apache Airflow&lt;/em&gt; e colocaria em uma &lt;em&gt;view&lt;/em&gt; do banco de dados todas as informações, já tratadas no formato desejado. Para uma quantidade de informações grande (milhões de linhas) esse seria o procedimento correto. Mas e se eu quiser algo pequeno? Para até aproximadamente 150 mil linhas, eu consigo utilizar uma planilha do sheets como destino do meu ETL. Se eu escrever todo o script em Python no Cloud Functions, caso no futuro os dados cresçam eu posso só mudar o destino, seja para um banco MongoDB ou para um banco PostgreSQL, a estrutura geral do script será a mesma, só mudarei o conector.  &lt;/p&gt;
+&lt;h3&gt;O processo&lt;/h3&gt;
+&lt;p&gt;Antes de começar, é preciso ter uma conta no Google Cloud Plataform, e um método de faturamento configurado (Mesmo ele sendo grátis, você tem um limite de créditos, caso eles acabem ou você exceda a cota grátis, o seu cartão será cobrado). Após criar uma conta (eu já tinha), é necessário instalar o SDK do GCP.&lt;br&gt;
+Eu utilizo o WSL2 no Windows, então no Terminal eu segui as &lt;a href="https://cloud.google.com/sdk/docs/downloads-apt-get"&gt;instruções do Google&lt;/a&gt; para instalar o SDK via &lt;code&gt;apt-get&lt;/code&gt;.
+Para dar o deploy no Cloud Functions, eu segui o quickstart, também do Google, que pode ser acessado &lt;a href="https://cloud.google.com/functions/docs/quickstart-python"&gt;aqui&lt;/a&gt;.  &lt;/p&gt;
+&lt;p&gt;OK, fiz o deploy e testei. Embora o deploy seja rápido, o que dura aproximadamente 1 minuto, eu precisva de uma maneira de testar localmente antes de dar o deploy, agilizando o processo de desenvolvimento e evitando ao máximo gastar créditos de maneira desnecessária.  &lt;/p&gt;
+&lt;p&gt;Uma solução é utilizar o &lt;code&gt;functions-framework&lt;/code&gt; do Google, que nada mais é que uma mini aplicação em Flask, que quando executada, roda um servidor http semelhante ao ambiente do Cloud Functions. Dessa maneira é possível fazer solicitações pela CLI usando &lt;code&gt;curl&lt;/code&gt;, e após ter testado corretamente a aplicação, dar o deploy pro Google Functions.  &lt;/p&gt;
+&lt;p&gt;Para executar o &lt;code&gt;functions-framework&lt;/code&gt;, basta executar o seguinte comando:&lt;br&gt;
+&lt;code&gt;$ functions-framework --target sheet_script --debug&lt;/code&gt;&lt;br&gt;
+É importante citar que após o parâmetro &lt;code&gt;--target&lt;/code&gt; deve vir o nome da sua função definida na sua aplicação &lt;code&gt;main.py&lt;/code&gt;. O parâmetro &lt;code&gt;--debug&lt;/code&gt; ativa a função debug, semelhante ao &lt;code&gt;debug=True&lt;/code&gt; do Flask, dessa maneira qualquer modificação feita no código será refletida instantâneamente na aplicação.  &lt;/p&gt;
+&lt;p&gt;Configurei a função e o ambiente de desenvolvimento, agora é hora de botar as mãos na massa. A partir daqui vou descrever um pouco da solução que encontrei para substituir o Google Apps Script.  &lt;/p&gt;
+&lt;p&gt;Utilizando a própria API do Google, a &lt;em&gt;Sheets API&lt;/em&gt;, é possível acessar qualquer planilha e manipular seus dados. Após ler &lt;a href="https://towardsdatascience.com/use-google-sheets-s3-and-python-to-build-a-website-quickly-8e4501dab02e"&gt;esse artigo&lt;/a&gt;, nele o autor descreve como ele fez um website com o Sheets e o S3 da AWS. Eu já havia utilizado a API do Sheets antes, principalmente a biblioteca de Python &lt;code&gt;gspread&lt;/code&gt;, mas o que me chamou a atenção foi o método de autenticação, por meio de &lt;em&gt;Service Account Credentials&lt;/em&gt;. Basicamente o método que eu havia utilizado antes era por meio de tokens OAuth2, que tinham uma duração de algumas horas apenas. Com esse método de autenticação por meio de SAC, é possível manter uma autenticação automática, que não depende do meu input e desse jeito, é possível rodar scripts acionados por CRON Jobs (Utilizando o Google Scheduler é uma opção, ou um próprio Script do Google Apps Script).  &lt;/p&gt;
+&lt;h3&gt;Resultado&lt;/h3&gt;
+&lt;p&gt;Após algumas horas brincando com o script, o resultado pode ser visualizado a seguir:  &lt;/p&gt;
+&lt;div class="gist"&gt;
+    &lt;script src='https://gist.github.com/cc14c03616a3e802024572e111e2aa53.js?file=main.py'&gt;&lt;/script&gt;
+    &lt;noscript&gt;
+        &lt;pre&gt;&lt;code&gt;import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import numpy as np
+
+#originKey = '1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI'
+#originSheetName = 'origin_sheet'
+#destinySheetName = 'benchmark_sheet'
+
+
+def sheet_script(request):
+    ## Auth
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(
+        "credentials.json", scope
+    )
+    gc = gspread.authorize(credentials)
+
+    ## POST Request
+
+    content_type = request.headers['content-type']
+    if content_type == 'application/json':
+        request_json = request.get_json(silent=True)
+        if request_json and 'origin_key' and 'origin_sheet_name' and 'destiny_sheet_name' in request_json:
+            origin_key = request_json['origin_key']
+            origin_sheet_name = request_json['origin_sheet_name']
+            destiny_sheet_name = request_json['destiny_sheet_name']
+            destiny_key = request_json['destiny_key']
+        else:
+            raise ValueError(
+                    "JSON is invalid")
+    else:
+        raise KeyError("Content type &lt;&gt; application/json")
+
+    ## Open origin_key Spreadsheet
+    origin_spreadsheet = gc.open_by_key(origin_key)
+    ## Get origin_sheet_name data
+    origin_sheet = origin_spreadsheet.worksheet(origin_sheet_name)
+    origin_sheet_data = origin_sheet.get_all_values()
+
+    ## Transform into DataFrame for manipulations
+    ##uncomment if you want to do data transformation
+
+    #header = origin_sheet_data[0]
+    #df = pd.DataFrame(data=origin_sheet_data, columns=header)
+    #df.drop(0, inplace=True)
+    #df['d'] = [1, 2, 3]
+    #rand = list(np.random.randint(0, 10, size=(1000, 4)))
+    #df2 = pd.DataFrame(rand, columns=list('abcd'))
+    #df = df.append(df2, ignore_index=True)
+    #df_list = [df.columns.values.tolist()] + df.values.tolist()
+
+    ## Copy data
+    destiny_spreadsheet = gc.open_by_key(destiny_key)
+    destiny_sheet = destiny_spreadsheet.worksheet(destiny_sheet_name)
+    destiny_sheet.clear()
+
+    #if you uncomment the section above, comment the line below.
+    df_list = origin_sheet_data
+
+    rows = len(df_list)
+    cols = len(df_list[0])
+    destiny_sheet.resize(rows, cols)
+    params = {'valueInputOption': 'RAW'}
+    body = {'values': df_list}
+    destiny_spreadsheet.values_append(f'{destiny_sheet_name}!A1', params, body)
+    request_json['status'] = 'OK'
+
+    return request_json
+&lt;/code&gt;&lt;/pre&gt;
+    &lt;/noscript&gt;
+&lt;/div&gt;
+&lt;p&gt;A função, por meio do parâmetro  de input &lt;code&gt;request&lt;/code&gt; recebe um &lt;code&gt;body&lt;/code&gt; em JSON no seguinte formato:
+&lt;code&gt;{
+  "destiny_key": "1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI",
+  "destiny_sheet_name": "benchmark_sheet",
+  "origin_key": "1G5CrpUKkn5H2tA2IvIYjyIASr3UMoGqo4yXBbX7PtHI",
+  "origin_sheet_name": "origin_sheet"
+}&lt;/code&gt;  &lt;/p&gt;
+&lt;p&gt;Utilizando como base esse código, é possível automatizar diversos fluxos que dependem de uma planilha, para casos em que não é possível construir uma view dentro do Banco de Dados para essa tarefa específica. ;)&lt;/p&gt;</content><category term="gcp"></category><category term="python"></category></entry><entry><title>Publicando via TravisCI</title><link href="https://yarson.xyz/travis-ci.html" rel="alternate"></link><published>2020-04-04T22:43:00-03:00</published><updated>2020-04-04T22:43:00-03:00</updated><author><name>Eli Yarson</name></author><id>tag:yarson.xyz,2020-04-04:/travis-ci.html</id><summary type="html">&lt;p&gt;Automatizando o deploy do meu blog por meio do TravisCI.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;O motivo&lt;/h3&gt;
+&lt;p&gt;No meu último post, explicando como foi feita a instalação e configuração desse blog, uma das minhas justificativas era que eu queria uma maneira de publicar no meu blog de qualquer ambiente, seja no meu PC em casa ou no Notebook em uma viagem.
+Embora a solução com o Docker fosse simples, ela ainda exigia um Notebook com Docker, nativo ou em uma VM.  &lt;/p&gt;
+&lt;p&gt;Eu comecei a pensar, e se eu fosse além? O ideal seria a possibilidade de publicar de qualquer lugar, em um computador que tenha acesso apenas ao navegador, ou em um celular.
+Pesquisei um pouco no Google qual seria a maneira mais simples de fazer isso, e aí encontrei uma opção viável.&lt;/p&gt;
+&lt;h3&gt;TravisCI&lt;/h3&gt;
+&lt;p&gt;O &lt;a href="https://travis-ci.com/"&gt;TravisCI&lt;/a&gt; é um serviço que torna possível realizar deploys automatizados, otimizando o fluxo de CI/CD de projetos. Utilizá-lo no Github Pages é trivial, mas você acaba aprendendo o básico caso um dia queira utilizar em um projeto mais complexo (com versionamento e diferentes ambientes de desenvolvimento).  &lt;/p&gt;
+&lt;p&gt;Como a maioria das ferramentas de automatização, ele utiliza como base a linguagem YAML, o que o torna familiar se você já mexeu com Dockerfiles e Makefiles, como é o meu caso, e portanto foi fácil transferir os comandos do Dockerfile para o Travis.  &lt;/p&gt;
+&lt;p&gt;Para que ele realize o deploy automático, é necessário conectar o seu Github com o TravisCI e configurar os tokens de acesso para o repositório do blog, como descrito no manual de configuração do TravisCI.  &lt;/p&gt;
+&lt;p&gt;No Google existem vários tutoriais de como fazer a configuração, mas caso queria ver a minha configuração em específico, o arquivo .travis.yml está no meu repositório do Github, &lt;a href="https://github.com/eliyarson/blog/blob/master/.travis.yml"&gt;aqui&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Resultado&lt;/h3&gt;
+&lt;p&gt;Após configurado, toda vez que meu repositório do Github for atualizado, o TravisCI realizará um deploy com as modificações. Com isso, eu posso criar uma postagem do celular, direto no meu repositório, e essa mudança será refletida no blog cerca de 40s depois (esse é o tempo que demora pro meu blog ser reconstruído e publicado).  &lt;/p&gt;
+&lt;p&gt;Achei interessante, e comecei a pesquisar mais um pouco das funcionalidades. Esses dias eu comecei a brincar um pouco com o AWS Lambda, fazendo umas API's REST em GO e Python e utilizando o Serverless para dar deploy. Se combinado com o TravisCI é possível realizar o mesmo tipo de automatização que foi feita no blog, porém dando deploy direto no AWS.  &lt;/p&gt;
+&lt;p&gt;Logo eu publico mais sobre minha API, por enquanto vou trabalhar um pouco mais nela enquanto aprendo sobre GO.&lt;/p&gt;</content><category term="pelican"></category><category term="publishing"></category><category term="travisci"></category></entry><entry><title>Construindo um blog com Pelican, Docker e Github Pages.</title><link href="https://yarson.xyz/meu-blog.html" rel="alternate"></link><published>2020-03-25T18:07:00-03:00</published><updated>2020-03-25T21:33:00-03:00</updated><author><name>Eli Yarson</name></author><id>tag:yarson.xyz,2020-03-25:/meu-blog.html</id><summary type="html">&lt;p&gt;Um pouco da minha jornada na construção desse blog.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Minha jornada com blogs&lt;/h3&gt;
+&lt;p&gt;A primeira vez que fiz um blog foi em 2014, na época o blog utilizava WordPress como CMS, o que tornava o processo bem simples, com um conhecimento bem raso de programação era possível criar um site com um tema responsivo, e realizar publicações direto da interface do WordPress. 
+Para esse blog eu queria algo leve (WordPress portanto é um no go) e simples de publicar.&lt;/p&gt;
+&lt;h3&gt;Por que Pelican?&lt;/h3&gt;
+&lt;p&gt;A minha primeira opção era usar Flask, pois já possuo um pouco de experiência em construção de APIs Flask. No entanto, Flask é um pouco de overkill para um site estático que serviria apenas como ferramenta de blogging, embora não fosse algo impossível. A vantagem de utilizar o Flask, embora desse um pouco mais de trabalho, seria a capacidade de criar um banco de dados em SQLite ou MongoDB, indexando os posts e criando um search engine no blog, além da possibilidade de comentar nos posts. Vi como seria pra fazer e decidi que por enquanto, um site estático me atenderia. (Priorize e simplifique!)  &lt;/p&gt;
+&lt;p&gt;Pesquisei um pouco, e vi que Jekyll é bem popular, no entanto ele é escrito em Ruby. Queria algo similar, porém em Python.  &lt;/p&gt;
+&lt;p&gt;OK, pesquisei então se existia uma framework similar ao Jekyll, porém feita em Python. E aí que me deparei com o &lt;a href="https://blog.getpelican.com"&gt;Pelican&lt;/a&gt;, um Framework que utiliza o &lt;a href="https://jinja.palletsprojects.com/en/2.11.x/"&gt;Jinja2&lt;/a&gt; para gerar temas e suporta a escrita Markdown e reStructuredText.  &lt;/p&gt;
+&lt;p&gt;A princípio ele atendeu minhas necessidades. Agora o próximo passo foi procurar um lugar onde hospedar o site.&lt;/p&gt;
+&lt;h3&gt;Github Pages&lt;/h3&gt;
+&lt;p&gt;O Github Pages foi lançado em 2008, e é uma alternativa gratuita para hospedar sites estáticos armazenados em repositórios. E o melhor de tudo é que ele é gratuito. Basta criar um repositório, e na hora de dar o commit para um branch de sua escolha (pode ser o master, mas recomendo utilizar outro).  &lt;/p&gt;
+&lt;p&gt;O site então pode ser acessado através da url:&lt;br&gt;
+&lt;code&gt;https://&amp;lt;user&amp;gt;.github.io/&amp;lt;repo&amp;gt;&lt;/code&gt;, substituindo user pelo seu usuário do Github e repo pelo nome do repositório.&lt;/p&gt;
+&lt;h3&gt;Docker&lt;/h3&gt;
+&lt;p&gt;Como prova de conceito, eu queria criar uma imagem docker já com todas as dependências, com tudo configurado, e dessa maneira eu não precisaria instalar os vários pacotes adicionais apenas para manter o blog. Dessa maneira, se algum dia eu precisasse publicar em outro computador (no notebook do trabalho, em uma viagem por exemplo) eu conseguiria clonar meu repo no Github, e apenas com o Docker instalado eu seria capaz de compilar a imagem e publica-lá. &lt;/p&gt;
+&lt;h3&gt;O processo&lt;/h3&gt;
+&lt;p&gt;Dessa maneira, tentando manter as coisas simples e sem precisar começar tudo do zero, eu primeiro fui ler pra ver se alguém já tinha feito algo semelhante e quais os problemas que poderiam surgir.  &lt;/p&gt;
+&lt;p&gt;Acabei encontrando &lt;a href="https://alexgose.com/build-blog-pelican-docker.html"&gt;esse post&lt;/a&gt; do Alex Gose, bem documentado e explicando de maneira simples como esse procedimento poderia ser feito. (kudos Alex!)  &lt;/p&gt;
+&lt;p&gt;Na minha primeira tentativa, eu segui as instruções e fiz o commit no meu repositório, porém o site não funcionou.&lt;br&gt;
+Após alguns minutos pesquisando, eu descobri o problema.  &lt;/p&gt;
+&lt;p&gt;Eu havia criado um repositório com o nome &lt;code&gt;eliyarson.github.io&lt;/code&gt;, como sugerido pelo Github Pages, e feito o commit no branch &lt;code&gt;gh-pages&lt;/code&gt;.  &lt;/p&gt;
+&lt;p&gt;Dessa maneira, eu conseguiria acessar o site pelo endereço &lt;code&gt;https://eliyarson.github.io&lt;/code&gt;, sem precisar especificar o nome do repositório. (No tutorial, o Alex cria um repositório chamado &lt;em&gt;mywebsite&lt;/em&gt;). O problema é que quando se utiliza esse endereço no nome do repositório, o Github não permite que voce faça o commit em outros branches, apenas no &lt;em&gt;master&lt;/em&gt;. Eu teria um site estático, porém não serviria meu propósito, de manter um 'gerador' de imagem Docker no meu repo.
+Eu voltei ao tutorial do Alex, e segui o exemplo dele: criei um repo com o nome &lt;em&gt;blog&lt;/em&gt;, e no fim deu tudo certo.  &lt;/p&gt;
+&lt;p&gt;Fiz algumas modificações, criei umas variáveis de ambiente para armazenar algumas credenciais e agilizar partes do processo, e criei um script shell para agilizar o processo de &lt;em&gt;build&lt;/em&gt; e &lt;em&gt;commit&lt;/em&gt; do blog.  &lt;/p&gt;
+&lt;p&gt;No fim, consegui o que eu queria, embora o processo tenho sido um pouco mais complicado do que eu esperava.  &lt;/p&gt;
+&lt;h3&gt;Próximos passos&lt;/h3&gt;
+&lt;p&gt;Recentemente, eu comecei a ler sobre Golang, e estou achando uma linguagem bem interessante. Vou tentar fazer o que eu pensei em fazer no começo com Flask, porém em Go.  &lt;/p&gt;
+&lt;p&gt;Acredito que será um desafio legal, e que me mostrará as diferenças de uma aplicação feita em Go e uma em Python.  &lt;/p&gt;</content><category term="pelican"></category><category term="publishing"></category></entry></feed>

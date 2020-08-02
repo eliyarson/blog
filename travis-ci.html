@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Publicando via TravisCI - Blog do Eli</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<link rel="canonical" href="https://yarson.xyz/travis-ci.html">
+
+        <meta name="author" content="Eli Yarson" />
+        <meta name="keywords" content="pelican,publishing,travisci" />
+        <meta name="description" content="Automatizando o deploy do meu blog por meio do TravisCI." />
+
+        <meta property="og:site_name" content="Blog do Eli" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Publicando via TravisCI"/>
+        <meta property="og:url" content="https://yarson.xyz/travis-ci.html"/>
+        <meta property="og:description" content="Automatizando o deploy do meu blog por meio do TravisCI."/>
+        <meta property="article:published_time" content="2020-04-04" />
+            <meta property="article:section" content="Python" />
+            <meta property="article:tag" content="pelican" />
+            <meta property="article:tag" content="publishing" />
+            <meta property="article:tag" content="travisci" />
+            <meta property="article:author" content="Eli Yarson" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://yarson.xyz/theme/css/bootstrap.simplex.min.css" type="text/css"/>
+    <link href="https://yarson.xyz/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="https://yarson.xyz/theme/css/pygments/native.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://yarson.xyz/theme/css/style.css" type="text/css"/>
+
+        <link href="https://yarson.xyz/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Blog do Eli ATOM Feed"/>
+
+        <link href="https://yarson.xyz/feeds/python.atom.xml" type="application/atom+xml" rel="alternate"
+              title="Blog do Eli Python ATOM Feed"/>
+</head>
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="https://yarson.xyz/" class="navbar-brand">
+Blog do Eli            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                         <li><a href="https://yarson.xyz/pages/about.html">
+                             Sobre
+                          </a></li>
+                        <li class="active">
+                            <a href="https://yarson.xyz/category/python.html">Python</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="https://yarson.xyz/travis-ci.html"
+                       rel="bookmark"
+                       title="Permalink to Publicando via TravisCI">
+                        Publicando via TravisCI
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2020-04-04T22:43:00-03:00"> Sat 04 April 2020</time>
+    </span>
+
+
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="https://yarson.xyz/tag/pelican.html">pelican</a>
+        /
+	<a href="https://yarson.xyz/tag/publishing.html">publishing</a>
+        /
+	<a href="https://yarson.xyz/tag/travisci.html">travisci</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <h3>O motivo</h3>
+<p>No meu último post, explicando como foi feita a instalação e configuração desse blog, uma das minhas justificativas era que eu queria uma maneira de publicar no meu blog de qualquer ambiente, seja no meu PC em casa ou no Notebook em uma viagem.
+Embora a solução com o Docker fosse simples, ela ainda exigia um Notebook com Docker, nativo ou em uma VM.  </p>
+<p>Eu comecei a pensar, e se eu fosse além? O ideal seria a possibilidade de publicar de qualquer lugar, em um computador que tenha acesso apenas ao navegador, ou em um celular.
+Pesquisei um pouco no Google qual seria a maneira mais simples de fazer isso, e aí encontrei uma opção viável.</p>
+<h3>TravisCI</h3>
+<p>O <a href="https://travis-ci.com/">TravisCI</a> é um serviço que torna possível realizar deploys automatizados, otimizando o fluxo de CI/CD de projetos. Utilizá-lo no Github Pages é trivial, mas você acaba aprendendo o básico caso um dia queira utilizar em um projeto mais complexo (com versionamento e diferentes ambientes de desenvolvimento).  </p>
+<p>Como a maioria das ferramentas de automatização, ele utiliza como base a linguagem YAML, o que o torna familiar se você já mexeu com Dockerfiles e Makefiles, como é o meu caso, e portanto foi fácil transferir os comandos do Dockerfile para o Travis.  </p>
+<p>Para que ele realize o deploy automático, é necessário conectar o seu Github com o TravisCI e configurar os tokens de acesso para o repositório do blog, como descrito no manual de configuração do TravisCI.  </p>
+<p>No Google existem vários tutoriais de como fazer a configuração, mas caso queria ver a minha configuração em específico, o arquivo .travis.yml está no meu repositório do Github, <a href="https://github.com/eliyarson/blog/blob/master/.travis.yml">aqui</a>.</p>
+<h3>Resultado</h3>
+<p>Após configurado, toda vez que meu repositório do Github for atualizado, o TravisCI realizará um deploy com as modificações. Com isso, eu posso criar uma postagem do celular, direto no meu repositório, e essa mudança será refletida no blog cerca de 40s depois (esse é o tempo que demora pro meu blog ser reconstruído e publicado).  </p>
+<p>Achei interessante, e comecei a pesquisar mais um pouco das funcionalidades. Esses dias eu comecei a brincar um pouco com o AWS Lambda, fazendo umas API's REST em GO e Python e utilizando o Serverless para dar deploy. Se combinado com o TravisCI é possível realizar o mesmo tipo de automatização que foi feita no blog, porém dando deploy direto no AWS.  </p>
+<p>Logo eu publico mais sobre minha API, por enquanto vou trabalhar um pouco mais nela enquanto aprendo sobre GO.</p>
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="https://linkedin.com/in/eliyarson"><i class="fa fa-linkedin-square fa-lg"></i> linkedin</a></li>
+    <li class="list-group-item"><a href="https://twitter.com/eliyarson"><i class="fa fa-twitter-square fa-lg"></i> twitter</a></li>
+    <li class="list-group-item"><a href="https://github.com/eliyarson"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2020 Eli Yarson Nabhan
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="https://yarson.xyz/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://yarson.xyz/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="https://yarson.xyz/theme/js/respond.min.js"></script>
+
+
+
+
+</body>
+</html>
