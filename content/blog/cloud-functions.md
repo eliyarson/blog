@@ -1,4 +1,4 @@
-Title: Primeiro projeto no Cloud Functions
+Title: Automatizando o Google Sheets por meio do Cloud Functions
 Date: 2020-04-17
 Category: Python
 Tags: gcp, python
