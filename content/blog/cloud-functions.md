@@ -51,4 +51,4 @@ A função, por meio do parâmetro  de input `request` recebe um `body` em JSON 
   "origin_sheet_name": "origin_sheet"
 } `  
 
---Terminar script.
+Utilizando como base esse código, é possível automatizar diversos fluxos que dependem de uma planilha, para casos em que não é possível construir uma view dentro do Banco de Dados para essa tarefa específica. ;)
