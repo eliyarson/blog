@@ -27,6 +27,8 @@ JINJA_ENVIRONMENT = {
     'extensions': ['jinja2.ext.i18n']
 }
 
+STATIC_PATHS = ['images', 'extra/CNAME']
+EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}
 # Following items are often useful when publishing
 
 #DISQUS_SITENAME = ""
